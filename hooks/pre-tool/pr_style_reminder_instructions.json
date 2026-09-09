@@ -1,0 +1,3 @@
+{
+  "style": "PR style: concise imperative title that describes the change. Body: what changed and why, the context a reviewer needs, link related issues (Fixes #123), note how it was tested and any breaking changes. Keep the PR focused and the body free of filler. When editing an existing body change ONLY what was asked and keep every other byte identical."
+}

@@ -1,0 +1,13 @@
+#!/usr/bin/env bash
+set -euo pipefail
+DOTAGENT="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
+TARGET="${1:-}"
+[ -n "$TARGET" ] || { echo "usage: $(basename "$0") /path/to/project"; exit 1; }
+TARGET="$(cd "$TARGET" && pwd)"
+
+if [ -f "$TARGET/.opencode/plugins/dotagent.js" ] && cmp -s "$DOTAGENT/adapters/opencode/dotagent.js" "$TARGET/.opencode/plugins/dotagent.js"; then
+  rm "$TARGET/.opencode/plugins/dotagent.js"
+  echo "removed the opencode plugin"
+fi
+
+echo "opencode uninstalled. .agent/ (hooks included), AGENTS.md and memory.db stay, delete them manually if wanted"

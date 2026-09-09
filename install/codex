@@ -1,0 +1,40 @@
+#!/usr/bin/env bash
+set -euo pipefail
+source "$(dirname "${BASH_SOURCE[0]}")/_core.sh"
+
+core_install
+
+adapter="$TARGET/.agent/hooks/codex.sh"
+if [ ! -f "$adapter" ]; then
+  cp "$DOTAGENT/adapters/codex/dispatch.sh" "$adapter"
+fi
+chmod +x "$adapter"
+
+mkdir -p "$TARGET/.codex"
+settings="$TARGET/.codex/hooks.json"
+[ -f "$settings" ] || echo '{}' > "$settings"
+
+for native in SessionStart UserPromptSubmit PreToolUse PostToolUse Stop SessionEnd PermissionRequest PreCompact PostCompact SubagentStart SubagentStop Interrupt; do
+  hook_command='bash "$(git rev-parse --show-toplevel)/.agent/hooks/codex.sh" '"$native"
+  if jq -e --arg event "$native" --arg command "$hook_command" 'any(.hooks[$event][]?.hooks[]?; .command == $command)' "$settings" >/dev/null; then
+    continue
+  fi
+  temporary="$(mktemp)"
+  jq --arg event "$native" --arg command "$hook_command" \
+    '.hooks[$event] = ((.hooks[$event] // []) + [{hooks: [
+      ({type: "command", command: $command} + if $event == "SessionEnd" or $event == "Interrupt" then {timeout: 3} else {} end)
+    ]}])' \
+    "$settings" > "$temporary"
+  mv "$temporary" "$settings"
+done
+
+if ! grep -qF DOTAGENT_PROMPT_MARKER "$TARGET/.agent/hooks/prompt-submit/feedback_capture.sh" || ! grep -qF DOTAGENT_EDIT_MARKER "$TARGET/.agent/hooks/stop/memory_save_check.sh"; then
+  echo "Existing hook scripts were preserved. Merge the Codex marker support from $DOTAGENT/hooks/prompt-submit/feedback_capture.sh and $DOTAGENT/hooks/stop/memory_save_check.sh to enable the Codex save gate."
+fi
+
+if ! grep -qxF '.agent/.codex-turns/' "$TARGET/.git/info/exclude" 2>/dev/null; then
+  echo '.agent/.codex-turns/' >> "$TARGET/.git/info/exclude"
+fi
+
+echo "codex install done (.codex/hooks.json wired; verified with codex-cli 0.153.4)"
+echo "Open a new Codex session in this trusted project and use /hooks to review and trust the installed hooks."

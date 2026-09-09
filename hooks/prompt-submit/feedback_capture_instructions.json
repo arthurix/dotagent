@@ -1,0 +1,4 @@
+{
+  "pattern": "wrong|not what|misunderstood|i meant|no you|you did not|didnt ask|this is not|that is not|thats not|still (broken|wrong|failing)|instead of|not good|redo|undo that",
+  "context": "This prompt reads like a correction or feedback on previous work. Before anything else: restate in one line what the user actually wants and fix course. Once the misunderstanding is clear, upsert the lesson into the memories table (type feedback, with why and how to apply) so it never repeats, announcing the save per AGENTS.md."
+}

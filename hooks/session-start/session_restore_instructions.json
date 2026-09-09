@@ -1,0 +1,4 @@
+{
+  "off": "dotagent memory is OFF for this project. Skip the memory cycle entirely, work as a plain agent. /dotagent on re-enables it.",
+  "footer": "This snapshot is the RESTORE step already executed for the checkout branch. Memories are shown as counts only, query the catalog surgically when a request may match prior knowledge (MEMORY SEARCH in AGENTS.md). If this chat belongs to a different branch, re-run the branch scoped queries for that branch instead. Print the REPORT from AGENTS.md as your first visible output."
+}

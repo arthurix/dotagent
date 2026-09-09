@@ -1,0 +1,13 @@
+#!/usr/bin/env bash
+set -euo pipefail
+source "$(dirname "${BASH_SOURCE[0]}")/_core.sh"
+
+core_install
+
+mkdir -p "$TARGET/.opencode/plugins"
+if [ ! -f "$TARGET/.opencode/plugins/dotagent.js" ]; then
+  cp "$DOTAGENT/adapters/opencode/dotagent.js" "$TARGET/.opencode/plugins/dotagent.js"
+  echo "installed the opencode plugin (.opencode/plugins/dotagent.js)"
+fi
+
+echo "opencode install done"

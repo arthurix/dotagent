@@ -1,0 +1,28 @@
+#!/usr/bin/env bash
+set -euo pipefail
+DOTAGENT="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
+TARGET="${1:-}"
+[ -n "$TARGET" ] || { echo "usage: $(basename "$0") /path/to/project"; exit 1; }
+TARGET="$(cd "$TARGET" && pwd)"
+
+settings="$TARGET/.codex/hooks.json"
+if [ -f "$settings" ]; then
+  temporary="$(mktemp)"
+  hook_prefix='bash "$(git rev-parse --show-toplevel)/.agent/hooks/codex.sh" '
+  jq --arg prefix "$hook_prefix" '
+    if .hooks then
+      .hooks |= (with_entries(.key as $event | .value |= (
+        map(.hooks |= map(select(
+          .command != ($prefix + $event)
+        ))) | map(select(.hooks | length > 0))
+      )) | with_entries(select(.value | length > 0)))
+    else . end
+  ' "$settings" > "$temporary"
+  mv "$temporary" "$settings"
+fi
+
+adapter="$TARGET/.agent/hooks/codex.sh"
+if [ -f "$adapter" ] && cmp -s "$DOTAGENT/adapters/codex/dispatch.sh" "$adapter"; then
+  rm "$adapter"
+fi
+echo "codex uninstalled. User hooks, .agent/, AGENTS.md and memory.db stay."

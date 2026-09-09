@@ -1,0 +1,3 @@
+{
+  "reason": "Files changed this turn but nothing was saved to .agent/memory.db. Classify what happened per AGENTS.md (task, bug, decision, refactoring, learning, feedback memory), save it now and announce the save, then finish. If truly nothing is worth saving, state that explicitly and stop."
+}

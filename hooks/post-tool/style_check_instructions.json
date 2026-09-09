@@ -1,0 +1,12 @@
+{
+  "checks": [
+    {
+      "pattern": "^(<<<<<<<|=======$|>>>>>>>)",
+      "message": "leftover merge conflict marker"
+    },
+    {
+      "pattern": "console\\.log\\(|print\\(.*debug|binding\\.pry|byebug|var_dump\\(|debugger;",
+      "message": "leftover debug output, remove it before shipping"
+    }
+  ]
+}

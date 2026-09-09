@@ -1,0 +1,18 @@
+#!/usr/bin/env bash
+set -euo pipefail
+TARGET="${1:-}"
+[ -n "$TARGET" ] || { echo "usage: $(basename "$0") /path/to/project"; exit 1; }
+TARGET="$(cd "$TARGET" && pwd)"
+
+SETTINGS="$TARGET/.gemini/settings.json"
+if [ -f "$SETTINGS" ] && grep -q '"contextFileName"[[:space:]]*:[[:space:]]*"AGENTS.md"' "$SETTINGS"; then
+  if command -v jq >/dev/null 2>&1; then
+    tmp="$(mktemp)"
+    jq 'del(.contextFileName)' "$SETTINGS" > "$tmp" && mv "$tmp" "$SETTINGS"
+    echo "removed contextFileName from .gemini/settings.json"
+  else
+    echo "remove \"contextFileName\" from $SETTINGS manually (jq not found)"
+  fi
+fi
+
+echo "gemini uninstalled. .agent/, AGENTS.md and memory.db stay, delete them manually if wanted"

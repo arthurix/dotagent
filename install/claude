@@ -1,0 +1,57 @@
+#!/usr/bin/env bash
+set -euo pipefail
+source "$(dirname "${BASH_SOURCE[0]}")/_core.sh"
+
+core_install
+
+if [ -e "$TARGET/CLAUDE.md" ] || [ -L "$TARGET/CLAUDE.md" ]; then
+  if [ "$(readlink "$TARGET/CLAUDE.md" 2>/dev/null || true)" != "AGENTS.md" ]; then
+    echo "CLAUDE.md already exists, left untouched. Point it at AGENTS.md manually."
+  fi
+else
+  ln -s AGENTS.md "$TARGET/CLAUDE.md"
+  echo "created CLAUDE.md -> AGENTS.md symlink"
+fi
+
+mkdir -p "$TARGET/.claude/commands"
+if [ ! -f "$TARGET/.claude/commands/dotagent.md" ]; then
+  cp "$DOTAGENT/commands/dotagent.md" "$TARGET/.claude/commands/dotagent.md"
+  echo "installed /dotagent command"
+fi
+
+SETTINGS="$TARGET/.claude/settings.json"
+mkdir -p "$TARGET/.claude"
+[ -f "$SETTINGS" ] || echo '{}' > "$SETTINGS"
+
+wire() {  # <native claude event> <dotagent event dir>
+  local native="$1" ev="$2" cmd tmp
+  cmd="\"\$CLAUDE_PROJECT_DIR\"/.agent/hooks/dispatch.sh $ev $native"
+  # match on the unescaped tail, the stored json escapes the quotes around the var
+  grep -qF "dispatch.sh $ev $native\"" "$SETTINGS" && return 0
+  tmp="$(mktemp)"
+  jq --arg e "$native" --arg c "$cmd" \
+    '.hooks[$e] = ((.hooks[$e] // []) + [{hooks: [{type: "command", command: $c}]}])' \
+    "$SETTINGS" > "$tmp" && mv "$tmp" "$SETTINGS"
+}
+
+# dotagent canonical events mapped to their native Claude Code names
+wire SessionStart     session-start
+wire UserPromptSubmit prompt-submit
+wire PreToolUse       pre-tool
+wire PostToolUse      post-tool
+wire Stop             stop
+wire SessionEnd       session-end
+
+# claude/ holds full native surface dirs, mkdir claude/<Event> and re-run to wire
+for evdir in "$TARGET/.agent/hooks/claude"/*/; do
+  [ -d "$evdir" ] || continue
+  ev="$(basename "$evdir")"
+  wire "$ev" "claude/$ev"
+done
+echo "wired one dispatch entry per event into .claude/settings.json"
+
+if ! grep -qxF '.agent/.last_prompt' "$TARGET/.git/info/exclude" 2>/dev/null; then
+  echo '.agent/.last_prompt' >> "$TARGET/.git/info/exclude"
+fi
+
+echo "claude install done"

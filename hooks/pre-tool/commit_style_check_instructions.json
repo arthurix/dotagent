@@ -1,0 +1,6 @@
+{
+  "style": "Commit message style: imperative mood summary line, about 50 chars, 72 max, no trailing period. For non trivial changes add a blank line then a body explaining what and why, wrapped at 72. Match the conventions already in the repo log.",
+  "deny_ai_trailer": "commit style: no AI attribution trailers in commit messages",
+  "deny_summary_too_long": "commit style: summary line too long, aim for 50 chars, 72 max, put detail in the body",
+  "deny_trailing_period": "commit style: no trailing period on the summary line"
+}

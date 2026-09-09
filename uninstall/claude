@@ -1,0 +1,40 @@
+#!/usr/bin/env bash
+set -euo pipefail
+DOTAGENT="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
+TARGET="${1:-}"
+[ -n "$TARGET" ] || { echo "usage: $(basename "$0") /path/to/project"; exit 1; }
+TARGET="$(cd "$TARGET" && pwd)"
+
+if [ -L "$TARGET/CLAUDE.md" ] && [ "$(readlink "$TARGET/CLAUDE.md")" = "AGENTS.md" ]; then
+  rm "$TARGET/CLAUDE.md"
+  echo "removed CLAUDE.md symlink"
+fi
+
+SETTINGS="$TARGET/.claude/settings.json"
+if [ -f "$SETTINGS" ]; then
+  if command -v jq >/dev/null 2>&1; then
+    tmp="$(mktemp)"
+    jq '
+      .hooks |= (
+        to_entries
+        | map(.value |= (
+            map(.hooks |= map(select(
+              (.command // "" | contains(".agent/hooks/dispatch.sh")) | not
+            )))
+            | map(select((.hooks | length) > 0))
+          ))
+        | map(select((.value | length) > 0))
+        | from_entries
+      )' "$SETTINGS" > "$tmp" && mv "$tmp" "$SETTINGS"
+    echo "removed the dispatch entries from .claude/settings.json"
+  else
+    echo "remove the dispatch.sh entries from $SETTINGS manually (jq not found)"
+  fi
+fi
+
+rm -f "$TARGET/.agent/.last_prompt"
+if [ -f "$TARGET/.claude/commands/dotagent.md" ] && cmp -s "$DOTAGENT/commands/dotagent.md" "$TARGET/.claude/commands/dotagent.md"; then
+  rm "$TARGET/.claude/commands/dotagent.md"
+fi
+
+echo "claude uninstalled. .agent/ (hooks included), AGENTS.md and memory.db stay, delete them manually if wanted"

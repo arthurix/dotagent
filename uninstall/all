@@ -1,0 +1,7 @@
+#!/usr/bin/env bash
+set -euo pipefail
+HERE="$(dirname "${BASH_SOURCE[0]}")"
+"$HERE/claude" "$@"
+"$HERE/gemini" "$@"
+"$HERE/codex" "$@"
+"$HERE/opencode" "$@"

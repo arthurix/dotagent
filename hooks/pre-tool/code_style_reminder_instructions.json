@@ -1,0 +1,10 @@
+[
+  {
+    "globs": ["*/test/*", "*.test.*", "*.spec.*"],
+    "style": "Test writing style: name each test after the behavior it verifies, one behavior per test, arrange act assert structure, assert on specific expected values, tests independent and deterministic, no logic in tests."
+  },
+  {
+    "globs": ["*/src/*", "*/app/*", "*/lib/*"],
+    "style": "Writing style: follow the conventions already in the file and project, intention-revealing names, small functions that do one thing, early returns over deep nesting, comments explain why not what, no dead code, no debug output, handle errors explicitly instead of swallowing them."
+  }
+]

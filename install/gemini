@@ -1,0 +1,23 @@
+#!/usr/bin/env bash
+set -euo pipefail
+source "$(dirname "${BASH_SOURCE[0]}")/_core.sh"
+
+core_install
+
+SETTINGS="$TARGET/.gemini/settings.json"
+mkdir -p "$TARGET/.gemini"
+
+if [ ! -f "$SETTINGS" ]; then
+  printf '{\n  "contextFileName": "AGENTS.md"\n}\n' > "$SETTINGS"
+  echo "created .gemini/settings.json"
+elif grep -q '"contextFileName"[[:space:]]*:[[:space:]]*"AGENTS.md"' "$SETTINGS"; then
+  echo "contextFileName already set in .gemini/settings.json"
+elif command -v jq >/dev/null 2>&1; then
+  tmp="$(mktemp)"
+  jq '.contextFileName = "AGENTS.md"' "$SETTINGS" > "$tmp" && mv "$tmp" "$SETTINGS"
+  echo "set contextFileName in .gemini/settings.json"
+else
+  echo "set \"contextFileName\": \"AGENTS.md\" in $SETTINGS manually (jq not found)"
+fi
+
+echo "gemini install done"
